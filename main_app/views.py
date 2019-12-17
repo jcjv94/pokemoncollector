@@ -1,6 +1,8 @@
-from django.shortcuts import render
-
-from .models import Pokemon
+from django.shortcuts import render, redirect
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView
+from .models import Pokemon, Item
+from .forms import BattlesForm
 
 
 # class Pokemon:
@@ -33,6 +35,67 @@ def pokemons_index(request):
     pokemons = Pokemon.objects.all()
     return render(request, 'pokemons/index.html', {'pokemons': pokemons})
 
+
 def pokemons_detail(request, pokemon_id):
     pokemon = Pokemon.objects.get(id=pokemon_id)
-    return render(request, 'pokemons/detail.html', { 'pokemon': pokemon })
+    items_pokemon_doesnt_have = Item.objects.exclude(
+        id__in=pokemon.items.all().values_list('id'))
+    battles_form = BattlesForm()
+    return render(request, 'pokemons/detail.html', {
+        'pokemon': pokemon, 'battles_form': battles_form,
+        'items': items_pokemon_doesnt_have
+    })
+
+
+class PokemonCreate(CreateView):
+    model = Pokemon
+    fields = '__all__'
+    success_url = '/pokemons/'
+
+
+class PokemonUpdate(UpdateView):
+    model = Pokemon
+    fields = ['level', 'attribute', 'description']
+
+
+class PokemonDelete(DeleteView):
+    model = Pokemon
+    success_url = '/pokemons/'
+
+
+def add_battles(request, pokemon_id):
+    form = BattlesForm(request.POST)
+    if form.is_valid():
+        new_battles = form.save(commit=False)
+        new_battles.pokemon_id = pokemon_id
+        new_battles.save()
+    return redirect('detail', pokemon_id=pokemon_id)
+
+
+class ItemList(ListView):
+    model = Item
+
+
+class ItemDetail(DetailView):
+    model = Item
+
+
+class ItemCreate(CreateView):
+    model = Item
+    fields = '__all__'
+
+
+class ItemUpdate(UpdateView):
+    model = Item
+    fields = ['name', 'color']
+
+
+class ItemDelete(DeleteView):
+    model = Item
+    success_url = '/items/'
+
+
+def assoc_item(request, pokemon_id, item_id):
+    # Note that you can pass a toy's id instead of the whole object
+    Pokemon.objects.get(id=pokemon_id).items.add(item_id)
+    return redirect('detail', pokemon_id=pokemon_id)

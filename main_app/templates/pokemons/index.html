@@ -4,8 +4,8 @@
 <h1>Pokemon List</h1>
 
 {% for pokemon in pokemons %}
-<div class="card">
-    <a href="{% url 'detail' pokemon.id %}">
+<a href="{% url 'detail' pokemon.id %}">
+    <div class="card">
         <div class="card-content">
             <span class="card-title">{{ pokemon.name }}</span>
             {% if pokemon.level > 0 %}
@@ -16,7 +16,7 @@
             <p>Attribute: {{ pokemon.attribute }}</p>
             <p>Description: {{ pokemon.description }}</p>
         </div>
-    </a>
+</a>
 </div>
 
 {% endfor %}

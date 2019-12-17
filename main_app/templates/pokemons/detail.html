@@ -3,17 +3,113 @@
 
 <h1>Pokemon Details</h1>
 
-<div class="card">
-    <div class="card-content">
-        <span class="card-title">{{ pokemon.name }}</span>
-        {% if pokemon.level > 0 %}
-        <p>Level: {{ pokemon.level }}</p>
+<div class="row">
+    <div class="col s6">
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">{{ pokemon.name }}</span>
+                {% if pokemon.level > 0 %}
+                <p>Level: {{ pokemon.level }}</p>
+                {% else %}
+                <p>Level: Egg</p>
+                {% endif %}
+                <p>Attribute: {{ pokemon.attribute }}</p>
+                <p>Description: {{ pokemon.description }}</p>
+            </div>
+            <div class="card-action">
+                <a href="{% url 'pokemons_update' pokemon.id %}">Edit</a>
+                <a href="{% url 'pokemons_delete' pokemon.id %}">Delete</a>
+            </div>
+        </div>
+    </div>
+    <div class="col s6">
+        <form action="{% url 'add_battles' pokemon.id %}" method="POST">
+            {% csrf_token %}
+            {{ battles_form.as_p }}
+            <input type="submit" class="btn" value="Add Battle">
+        </form>
+        <br>
+        {% if pokemon.battle_for_today %}
+        <div class="card-panel teal-text center-align">{{pokemon.name}} has battled enough for today</div>
         {% else %}
-        <p>Level: Egg</p>
+        <div class="card-panel red-text center-align">{{pokemon.name}} hasn't battled today</div>
         {% endif %}
-        <p>Attribute: {{ pokemon.attribute }}</p>
-        <p>Description: {{ pokemon.description }}</p>
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Damage</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for battles in pokemon.battles_set.all %}
+                <tr>
+                    <td>{{battles.date}}</td>
+                    <td>{{battles.get_damage_display}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
     </div>
 </div>
+
+<hr>
+<div class="row">
+    <div class="col s6">
+        <h3>{{ pokemon.name }}'s Items</h3>
+        {% if pokemon.items.count %}
+        {% for item in pokemon.items.all %}
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    A <span style="color: {{ item.color }}">{{ item.color }}</span> {{ item.name }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <h5>No Items :(</h5>
+        {% endif %}
+    </div>
+
+    <div class="col s6">
+        <h3>Available Items</h3>
+        {% if items.count %}
+        {% for item in items.all %}
+        <div class="card">
+            <div class="card-content">
+                <span class="card-title">
+                    A <span style="color: {{ item.color }}">{{ item.color }}</span> {{ item.name }}
+                </span>
+            </div>
+            <div class="card-action">
+                <form action="{% url 'assoc_item' pokemon.id item.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn">Add</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <h5>{{pokemon.name}} Already Has All Items Available</h5>
+        {% endif %}
+    </div>
+
+</div>
+
+<script>
+    var dateEl = document.getElementById('id_date');
+    M.Datepicker.init(dateEl, {
+        format: 'yyyy-mm-dd',
+        defaultDate: new Date(),
+        setDefaultDate: true,
+        autoClose: true
+    });
+
+    var selectEl = document.getElementById('id_damage');
+    M.FormSelect.init(selectEl);
+</script>
 
 {% endblock %}

@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.views.generic import ListView, DetailView
-from .models import Pokemon, Item
+from .models import Pokemon, Item, Photo
 from .forms import BattlesForm
+import uuid
+import boto3
 
 
 # class Pokemon:
@@ -87,7 +89,7 @@ class ItemCreate(CreateView):
 
 class ItemUpdate(UpdateView):
     model = Item
-    fields = ['name', 'color']
+    fields = ['name', 'color', 'ability']
 
 
 class ItemDelete(DeleteView):
@@ -98,4 +100,22 @@ class ItemDelete(DeleteView):
 def assoc_item(request, pokemon_id, item_id):
     # Note that you can pass a toy's id instead of the whole object
     Pokemon.objects.get(id=pokemon_id).items.add(item_id)
+    return redirect('detail', pokemon_id=pokemon_id)
+
+
+def add_photo(request, pokemon_id):
+    S3_BASE_URL = 'https://s3-us-west-1.amazonaws.com/'
+    BUCKET = 'pokemoncollectr'
+    photo_file = request.FILES.get('photo-file', None)
+    if photo_file:
+        s3 = boto3.client('s3')
+        key = uuid.uuid4().hex[:6] + \
+            photo_file.name[photo_file.name.rfind('.'):]
+        try:
+            s3.upload_fileobj(photo_file, BUCKET, key)
+            url = f"{S3_BASE_URL}{BUCKET}/{key}"
+            photo = Photo(url=url, pokemon_id=pokemon_id)
+            photo.save()
+        except:
+            print('An Error occurred uploading file to S3')
     return redirect('detail', pokemon_id=pokemon_id)

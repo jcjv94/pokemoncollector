@@ -13,6 +13,8 @@ urlpatterns = [
          views.PokemonDelete.as_view(), name='pokemons_delete'),
     path('pokemons/<int:pokemon_id>/add_battles/',
          views.add_battles, name='add_battles'),
+    path('pokemons/<int:pokemon_id>/add_photo/',
+         views.add_photo, name='add_photo'),
     path('pokemons/<int:pokemon_id>/assoc_item/<int:item_id>/',
          views.assoc_item, name='assoc_item'),
     path('items/', views.ItemList.as_view(), name='items_index'),
